@@ -345,14 +345,15 @@ int main(int argc, char * argv[]) {
     // Xor
     {1000, "Xor8-naive"}, {1002, "Xor16-naive"},
     {0, "Xor8"}, {2, "Xor16"},
-    {3, "Xor+8"}, {4, "Xor+16"},
+    {3, "Xor+8"}, {4, "Xor+16"}, 
+    {5, "Xor32"},
     // Cuckooo
     {10,"Cuckoo8"}, {11,"Cuckoo12"}, {12,"Cuckoo16"},
     {13,"CuckooSemiSort13"},
     {14, "Cuckoo8-2^n"}, {15, "Cuckoo12-2^n"}, {16, "Cuckoo16-2^n"},
     {17, "CuckooSemiSort13-2^n"},
     {18, "CuckooFuse8"},
-    {19, "CuckooFuse16"},
+    {19, "CuckooFuse16"}, {21, "Cuckoo32"},
     // GCS
     {20,"GCS"},
 #ifdef __AVX2__
@@ -401,8 +402,10 @@ int main(int argc, char * argv[]) {
     {97, "XorBinaryFuse16-naive"},
     {116, "XorBinaryFuse8"},
     {117, "XorBinaryFuse16"},
+    {120, "XorBinaryFuse32"},
     {118, "XorBinaryFuse8-4wise"},
     {119, "XorBinaryFuse16-4wise"},
+    {121, "XorBinaryFuse32-4wise"},
     {1056, "HomogRibbon64_5"},
     {1076, "HomogRibbon64_7"}, // interesting
     {1086, "HomogRibbon64_8"},
@@ -606,6 +609,13 @@ int main(int argc, char * argv[]) {
           add_count, to_add, intersectionsize, mixed_sets,  true);
       cout << setw(NAME_WIDTH) << names[a] << cf << endl;
   }
+  a = 5;
+  if (algorithmId == a || algorithmId < 0 || (algos.find(a) != algos.end())) {
+      auto cf = FilterBenchmark<
+          XorFilter<uint64_t, uint32_t, SimpleMixSplit>>(
+          add_count, to_add, intersectionsize, mixed_sets,  true);
+      cout << setw(NAME_WIDTH) << names[a] << cf << endl;
+  }
   a = 1000;
   if (algorithmId == a || (algos.find(a) != algos.end())) {
       auto cf = FilterBenchmark<
@@ -670,6 +680,13 @@ int main(int argc, char * argv[]) {
   if (algorithmId == a || algorithmId < 0 || (algos.find(a) != algos.end())) {
       auto cf = FilterBenchmark<
           CuckooFilterStable<uint64_t, 16, SingleTable, SimpleMixSplit>>(
+          add_count, to_add, intersectionsize, mixed_sets,  false, true);
+      cout << setw(NAME_WIDTH) << names[a] << cf << endl;
+  }
+  a = 21;
+  if (algorithmId == a || algorithmId < 0 || (algos.find(a) != algos.end())) {
+      auto cf = FilterBenchmark<
+          CuckooFilterStable<uint64_t, 32, SingleTable, SimpleMixSplit>>(
           add_count, to_add, intersectionsize, mixed_sets,  false, true);
       cout << setw(NAME_WIDTH) << names[a] << cf << endl;
   }
@@ -1002,6 +1019,13 @@ int main(int argc, char * argv[]) {
           add_count, to_add, intersectionsize, mixed_sets,  true);
       cout << setw(NAME_WIDTH) << names[a] << cf << endl;
   }
+  a = 120;
+  if (algorithmId == a || algorithmId < 0 || (algos.find(a) != algos.end())) {
+      auto cf = FilterBenchmark<
+          xorbinaryfusefilter_lowmem::XorBinaryFuseFilter<uint64_t, uint32_t>>(
+          add_count, to_add, intersectionsize, mixed_sets,  true);
+      cout << setw(NAME_WIDTH) << names[a] << cf << endl;
+  }
   a = 118;
   if (algorithmId == a || algorithmId < 0 || (algos.find(a) != algos.end())) {
       auto cf = FilterBenchmark<
@@ -1016,6 +1040,13 @@ int main(int argc, char * argv[]) {
           add_count, to_add, intersectionsize, mixed_sets,  true);
       cout << setw(NAME_WIDTH) << names[a] << cf << endl;
   }  
+  a = 121;
+  if (algorithmId == a || algorithmId < 0 || (algos.find(a) != algos.end())) {
+      auto cf = FilterBenchmark<
+          xorbinaryfusefilter_lowmem4wise::XorBinaryFuseFilter<uint64_t, uint32_t>>(
+          add_count, to_add, intersectionsize, mixed_sets,  true);
+      cout << setw(NAME_WIDTH) << names[a] << cf << endl;
+  }
   
    // Homogeneous Ribbon
   a = 1056;
