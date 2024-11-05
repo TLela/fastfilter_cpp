@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <assert.h>
+#include <math.h>
 
 #include "hashutil.h"
 #include "timing.h"
@@ -41,6 +42,7 @@ double calculateSizeFactor(size_t arity, size_t size) {
 
 #include "3wise_xor_binary_fuse_filter_naive.h"
 #include "3wise_xor_binary_fuse_filter_lowmem.h"
+#include "3wise_xor_binary_fuse_filter_lowmem_adapted.h"
 
 #include "4wise_xor_binary_fuse_filter_naive.h"
 #include "4wise_xor_binary_fuse_filter_lowmem.h"

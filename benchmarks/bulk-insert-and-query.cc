@@ -401,6 +401,7 @@ int main(int argc, char * argv[]) {
     {97, "XorBinaryFuse16-naive"},
     {116, "XorBinaryFuse8"},
     {117, "XorBinaryFuse16"},
+    {120, "XorBinaryFuse16_adapted"},
     {118, "XorBinaryFuse8-4wise"},
     {119, "XorBinaryFuse16-4wise"},
     {1056, "HomogRibbon64_5"},
@@ -999,6 +1000,13 @@ int main(int argc, char * argv[]) {
   if (algorithmId == a || algorithmId < 0 || (algos.find(a) != algos.end())) {
       auto cf = FilterBenchmark<
           xorbinaryfusefilter_lowmem::XorBinaryFuseFilter<uint64_t, uint16_t>>(
+          add_count, to_add, intersectionsize, mixed_sets,  true);
+      cout << setw(NAME_WIDTH) << names[a] << cf << endl;
+  }
+  a = 120;
+  if (algorithmId == a || algorithmId < 0 || (algos.find(a) != algos.end())) {
+      auto cf = FilterBenchmark<
+          xorbinaryfusefilter_lowmem_adapted::XorBinaryFuseFilter<uint64_t, uint16_t>>(
           add_count, to_add, intersectionsize, mixed_sets,  true);
       cout << setw(NAME_WIDTH) << names[a] << cf << endl;
   }
