@@ -87,10 +87,15 @@ basic_ostream<CharT, Traits>& operator<<(
        << setw(8) << setprecision(1) << 100 * (stats.bits_per_item / minbits - 1)
        << " " << setw(7) << setprecision(3) << (stats.add_count / 1000000.);
   } else {
+    // os << setw(8) << setprecision(4) << stats.false_positive_probabilty * 100
+    //    << setw(11) << setprecision(2) << stats.bits_per_item << setw(11) << 64
+    //    << setw(8) << setprecision(1) << 0
+    //    << " " << setw(7) << setprecision(3) << (stats.add_count / 1000000.)<< "too small of a value";
+    const auto minbits = log2(1 / stats.false_positive_probabilty);
     os << setw(8) << setprecision(4) << stats.false_positive_probabilty * 100
-       << setw(11) << setprecision(2) << stats.bits_per_item << setw(11) << 64
-       << setw(8) << setprecision(1) << 0
-       << " " << setw(7) << setprecision(3) << (stats.add_count / 1000000.);
+       << setw(11) << setprecision(2) << stats.bits_per_item << setw(11) << minbits
+       << setw(8) << setprecision(1) << 100 * (stats.bits_per_item / minbits - 1)
+       << " " << setw(7) << setprecision(3) << (stats.add_count / 1000000.)<< "too small of a value";
   }
   return os;
 }
@@ -344,7 +349,7 @@ int main(int argc, char * argv[]) {
   std::map<int,std::string> names = {
     // Xor
     {1000, "Xor8-naive"}, {1002, "Xor16-naive"},
-    {0, "Xor8"}, {2, "Xor16"},
+    {0, "Xor8"}, {2, "Xor16"}, {5, "Xor32"}, {6, "Xor64"},
     {3, "Xor+8"}, {4, "Xor+16"},
     // Cuckooo
     {10,"Cuckoo8"}, {11,"Cuckoo12"}, {12,"Cuckoo16"},
@@ -606,6 +611,20 @@ int main(int argc, char * argv[]) {
           add_count, to_add, intersectionsize, mixed_sets,  true);
       cout << setw(NAME_WIDTH) << names[a] << cf << endl;
   }
+  a = 5;
+  if (algorithmId == a || algorithmId < 0 || (algos.find(a) != algos.end())) {
+      auto cf = FilterBenchmark<
+          XorFilter<uint64_t, uint32_t, SimpleMixSplit>>(
+          add_count, to_add, intersectionsize, mixed_sets,  true);
+      cout << setw(NAME_WIDTH) << names[a] << cf << endl;
+  }
+  a = 6;
+  if (algorithmId == a || algorithmId < 0 || (algos.find(a) != algos.end())) {
+      auto cf = FilterBenchmark<
+          XorFilter<uint64_t, uint64_t, SimpleMixSplit>>(
+          add_count, to_add, intersectionsize, mixed_sets,  true);
+      cout << setw(NAME_WIDTH) << names[a] << cf << endl;
+  }
   a = 1000;
   if (algorithmId == a || (algos.find(a) != algos.end())) {
       auto cf = FilterBenchmark<
@@ -650,6 +669,7 @@ int main(int argc, char * argv[]) {
           add_count, to_add, intersectionsize, mixed_sets,  true);
       cout << setw(NAME_WIDTH) << names[a] << cf << endl;
   }
+
 
   // Cuckoo ----------------------------------------------------------
   a = 10;
