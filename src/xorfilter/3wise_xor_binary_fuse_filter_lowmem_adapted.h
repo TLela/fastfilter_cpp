@@ -84,27 +84,35 @@ public:
 
       // the current implementation hardcodes a 18-bit limit to
       // to the segment length.
+
       if (this->segmentLength > (1 << 18)) {
-        this->segmentLength = (1 << 18);
+        this->segmentLength = (1 << 18); 
       }
       size_t segmentCount =
           (capacity + segmentLength - 1) / segmentLength - (arity - 1);
+      printf("1. Segment count is %lu\n", segmentCount);
       this->arrayLength = (segmentCount + arity - 1) * segmentLength;
+      printf("2. Array length is %lu\n", this->arrayLength); 
       this->segmentLengthMask = this->segmentLength - 1;
+      printf("3. Segment length mask is %lu\n", this->segmentLengthMask);
       this->segmentCount =
           (this->arrayLength + this->segmentLength - 1) / this->segmentLength;
+      printf("4. Segment count is %lu\n", this->segmentCount);
       this->segmentCount =
           this->segmentCount <= arity - 1 ? 1 : this->segmentCount - (arity - 1);
+      printf("5. Segment count is %lu\n", this->segmentCount);
       this->arrayLength = (this->segmentCount + arity - 1) * this->segmentLength;
+      printf("6. Array length is %lu\n", this->arrayLength);
       this->segmentCountLength = this->segmentCount * this->segmentLength;
+      printf("7. Segment count length is %lu\n", this->segmentCountLength);
     }
     fingerprints = new FingerprintType[arrayLength]();
     std::fill_n(fingerprints, arrayLength, 0);
-    printf("Capacity is %lu\n", capacity);
-    printf("sizeFactor is %f\n", sizeFactor);
-    printf("Segment count is %lu\n", segmentCount);
-    printf("Array length is %lu\n", this->arrayLength);
-    printf("Segment length is %lu\n", this->segmentLength);
+    // printf("Capacity is %lu\n", capacity);
+    // printf("sizeFactor is %f\n", sizeFactor);
+    // printf("Segment count is %lu\n", segmentCount);
+    // printf("Array length is %lu\n", this->arrayLength);
+    // printf("Segment length is %lu\n", this->segmentLength);
   }
 
   ~XorBinaryFuseFilter() {
