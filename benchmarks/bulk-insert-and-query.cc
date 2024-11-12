@@ -27,7 +27,7 @@ struct Statistics {
   double nanos_per_remove;
   // key: percent of queries that were expected to be positive
   map<int, double> nanos_per_finds;
-  double false_positive_probabilty;
+  long double false_positive_probabilty;
   double bits_per_item;
 };
 
@@ -87,15 +87,11 @@ basic_ostream<CharT, Traits>& operator<<(
        << setw(8) << setprecision(1) << 100 * (stats.bits_per_item / minbits - 1)
        << " " << setw(7) << setprecision(3) << (stats.add_count / 1000000.);
   } else {
-    // os << setw(8) << setprecision(4) << stats.false_positive_probabilty * 100
-    //    << setw(11) << setprecision(2) << stats.bits_per_item << setw(11) << 64
-    //    << setw(8) << setprecision(1) << 0
-    //    << " " << setw(7) << setprecision(3) << (stats.add_count / 1000000.)<< "too small of a value";
-    const auto minbits = log2(1 / stats.false_positive_probabilty);
     os << setw(8) << setprecision(4) << stats.false_positive_probabilty * 100
-       << setw(11) << setprecision(2) << stats.bits_per_item << setw(11) << minbits
-       << setw(8) << setprecision(1) << 100 * (stats.bits_per_item / minbits - 1)
-       << " " << setw(7) << setprecision(3) << (stats.add_count / 1000000.)<< "too small of a value";
+       << setw(11) << setprecision(2) << stats.bits_per_item << setw(11) << "-"
+       << setw(8) << setprecision(1) << "-"
+       << " " << setw(7) << setprecision(3) << (stats.add_count / 1000000.);
+
   }
   return os;
 }
@@ -238,8 +234,13 @@ Statistics FilterBenchmark(
     const auto start_time = NowNanos();
     found_count = 0;
     for (const auto v : to_lookup_mixed) {
-      found_count += FilterAPI<Table>::Contain(v, &filter);
+      size_t count = FilterAPI<Table>::Contain(v, &filter);
+      found_count += count;
+      //printf("v %llu\n", v);
+      //printf("count %zu\n", count);
     }
+    // printf("found_count %lu\n", found_count);
+    // printf("found_probability %f\n", found_probability);
     const auto lookup_time = NowNanos() - start_time;
 #ifdef __linux__
     unified.end(results);
@@ -272,7 +273,9 @@ Statistics FilterBenchmark(
       if(t.to_lookup_mixed.size() == intersectionsize) {
         cerr << "WARNING: fpp is probably meaningless! " << endl;
       }
-      result.false_positive_probabilty = (found_count  - intersectionsize) / static_cast<double>(to_lookup_mixed.size() - intersectionsize);
+      result.false_positive_probabilty = (found_count  - intersectionsize) / static_cast<long double>(to_lookup_mixed.size() - intersectionsize);
+    //   printf("found_count %lu, intersectionsize %lu, to_lookup_mixed.size() %lu\n, true_match %lu\n", found_count, intersectionsize, to_lookup_mixed.size(), true_match);
+    //   printf("false_positive_probabilty %Lf\n", result.false_positive_probabilty);
     }
   }
 
@@ -352,7 +355,7 @@ int main(int argc, char * argv[]) {
     {0, "Xor8"}, {2, "Xor16"}, {5, "Xor32"}, {6, "Xor64"},
     {3, "Xor+8"}, {4, "Xor+16"},
     // Cuckooo
-    {10,"Cuckoo8"}, {11,"Cuckoo12"}, {12,"Cuckoo16"},
+    {10,"Cuckoo8"}, {11,"Cuckoo12"}, {12,"Cuckoo16"}, {21, "Cuckoo32"},
     {13,"CuckooSemiSort13"},
     {14, "Cuckoo8-2^n"}, {15, "Cuckoo12-2^n"}, {16, "Cuckoo16-2^n"},
     {17, "CuckooSemiSort13-2^n"},
@@ -406,6 +409,7 @@ int main(int argc, char * argv[]) {
     {97, "XorBinaryFuse16-naive"},
     {116, "XorBinaryFuse8"},
     {117, "XorBinaryFuse16"},
+    {120, "XorBinaryFuse32"},
     {118, "XorBinaryFuse8-4wise"},
     {119, "XorBinaryFuse16-4wise"},
     {1056, "HomogRibbon64_5"},
@@ -546,6 +550,10 @@ int main(int argc, char * argv[]) {
   size_t intersectionsize = match_size(to_lookup, to_add, &distinct_lookup, & distinct_add);
   std::cout << "\r                       \r" << std::flush;
 
+//   cout << "WARNING: Out of the lookup table, "<< intersectionsize<< " ("<<intersectionsize * 100.0 / to_lookup.size() << "%) of values are present in the filter." << endl;
+//   cout << "to_lookup starts with " << &to_lookup[0] << " and ends with " << &to_lookup[to_lookup.size() - 1] << endl;
+//   cout << "to_add starts with " << &to_add[0] << " and ends with " << &to_add[to_add.size() - 1] << endl;
+  
   if(intersectionsize > 0) {
     cout << "WARNING: Out of the lookup table, "<< intersectionsize<< " ("<<intersectionsize * 100.0 / to_lookup.size() << "%) of values are present in the filter." << endl;
   }
@@ -690,6 +698,13 @@ int main(int argc, char * argv[]) {
   if (algorithmId == a || algorithmId < 0 || (algos.find(a) != algos.end())) {
       auto cf = FilterBenchmark<
           CuckooFilterStable<uint64_t, 16, SingleTable, SimpleMixSplit>>(
+          add_count, to_add, intersectionsize, mixed_sets,  false, true);
+      cout << setw(NAME_WIDTH) << names[a] << cf << endl;
+  }
+  a = 21;
+  if (algorithmId == a || algorithmId < 0 || (algos.find(a) != algos.end())) {
+      auto cf = FilterBenchmark<
+          CuckooFilterStable<uint64_t, 32, SingleTable, SimpleMixSplit>>(
           add_count, to_add, intersectionsize, mixed_sets,  false, true);
       cout << setw(NAME_WIDTH) << names[a] << cf << endl;
   }
@@ -1019,6 +1034,13 @@ int main(int argc, char * argv[]) {
   if (algorithmId == a || algorithmId < 0 || (algos.find(a) != algos.end())) {
       auto cf = FilterBenchmark<
           xorbinaryfusefilter_lowmem::XorBinaryFuseFilter<uint64_t, uint16_t>>(
+          add_count, to_add, intersectionsize, mixed_sets,  true);
+      cout << setw(NAME_WIDTH) << names[a] << cf << endl;
+  }
+  a = 120;
+  if (algorithmId == a || algorithmId < 0 || (algos.find(a) != algos.end())) {
+      auto cf = FilterBenchmark<
+          xorbinaryfusefilter_lowmem::XorBinaryFuseFilter<uint64_t, uint32_t>>(
           add_count, to_add, intersectionsize, mixed_sets,  true);
       cout << setw(NAME_WIDTH) << names[a] << cf << endl;
   }
